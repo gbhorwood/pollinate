@@ -1,3 +1,4 @@
+# Pollinate
 Pollinate is a command for `artisan` for use in Laravel projects that creates database seed files from your database. If you have data in a database and want to turn it into seeds, pollinate is here.
 
 ## Install
