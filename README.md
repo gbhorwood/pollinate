@@ -6,7 +6,9 @@ To install manually, download the the `pollinate.php` file to `app/Console/Comma
 
 For a quicker install, run:
 
-`php artisan make:command pollinate && curl -L https://raw.githubusercontent.com/gbhorwood/pollinate/master/src/pollinate.php -o app/Console/Commands/pollinate.php`
+```shell
+php artisan make:command pollinate && curl -L https://raw.githubusercontent.com/gbhorwood/pollinate/master/src/pollinate.php -o app/Console/Commands/pollinate.php
+```
 
 ## Prerequisites
 Pollinate requires the following:
@@ -18,7 +20,7 @@ Pollinate requires the following:
 ## Usage
 The simplest usage of pollinate is:
 
-```
+```shell
 php artisan gbhorwood:pollinate
 ```
 
@@ -27,14 +29,14 @@ This will create seed files for _all_ the tables in your database, and all seed 
 ### pollinating specific tables
 If you only wish to create seed files for specified tables, you can provide a comma-separated list of table names as an argument:
 
-```
+```shell
 php artisan gbhorwood:pollinate users,pets,user_pet
 ```
 
 ### specifying a prefix
 By default, pollinate prefixes all seed file and class names with `pollinate_`. You can specify your own prefix with the `--prefix=` option:
 
-```
+```shell
 php artisan gbhorwood:pollinate --prefix=mydevbox
 ```
 
@@ -45,7 +47,7 @@ Pollinate's default behaviour is to not overwrite existing seed files. If one or
 
 If you wish to override this behaviour so that existing seed files are overwritten, you can pass the `--overwrite` option:
 
-```
+```shell
 php artisan gbhorwood:pollinate --overwrite
 ```
 
