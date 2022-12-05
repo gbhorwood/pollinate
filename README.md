@@ -26,6 +26,8 @@ php artisan gbhorwood:pollinate
 
 This will create seed files for _all_ the tables in your database, and all seed files and classnames will be prefixed with the default `pollinate_` prefix.
 
+**note:** some tables are automatically excluded from pollinations, such as passport tables and job tables. these are defined in the script in the `ignoreTables` array.
+
 ### pollinating specific tables
 If you only wish to create seed files for specified tables, you can provide a comma-separated list of table names as an argument:
 
@@ -54,4 +56,7 @@ php artisan gbhorwood:pollinate --overwrite
 ### missing or empty tables
 Pollinate does not write seed files for missing or empty tables.
 
+### output
+All non-error output can be suppressed by passing the `--silent` option.
 
+If output is not suppressed, pollinate will output a list of classes that can be pasted into your `DatabaseSeeder.php` file.
