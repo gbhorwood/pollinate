@@ -35,6 +35,20 @@ If you only wish to create seed files for specified tables, you can provide a co
 php artisan gbhorwood:pollinate users,pets,user_pet
 ```
 
+#### ignored tables
+Some tables are preset to not bet pollinated. These are tables for things like passport or jobs. You can dump a list of ignored tables with
+
+```shell
+php artisan gbhorwood:pollinate --show-ignored
+```
+
+If you explicitly name a table in the tables list, it will be pollinated even if it is in the ignored list
+
+```shell
+php artisan gbhorwood:pollinate jobs,failed_jobs
+```
+
+
 ### specifying a prefix
 By default, pollinate prefixes all seed file and class names with `pollinate_`. You can specify your own prefix with the `--prefix=` option:
 
