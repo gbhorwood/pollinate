@@ -30,9 +30,10 @@ use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 
 /**
- * Page size for database selects
+ * Default page size for database selects
  */
-define('POLLINATE_SELECT_SIZE', 5);
+define('DEFAULT_PAGE_SIZE', 5);
+
 
 class pollinate extends Command
 {
@@ -43,8 +44,10 @@ class pollinate extends Command
      */
     protected $signature = 'gbhorwood:pollinate
         {--prefix= : Prefix to file and class names. Default \'pollinate\'}
+        {--pagesize= : Number of records per insert}
         {--overwrite : Overwrite existing seeder files of the same name}
         {--silent : Suppress non-error output}
+        {--show-ignored : Show tables that will not be seeded}
         {tables?}';
 
     /**
@@ -94,6 +97,13 @@ class pollinate extends Command
      * @var bool
      */
     protected bool $overwrite = false;
+
+    /**
+     * Number of records to select and write per page
+     *
+     * @var Int
+     */
+    protected Int $pageSize;
 
     /**
      * The full path of the directory where seeder files 
@@ -190,8 +200,10 @@ class pollinate extends Command
              */
             foreach($this->select($tablename) as $recordSet) {
                 if(count($recordSet) > 0) {
+                    $insertBlockHead = $this->getInsertBlockHead($tablename);
+                    $insertBlockFoot = $this->getInsertBlockFoot($tablename);
                     $formattedRecordSet = $this->formatRecordSet($recordSet);
-                    fwrite($fp, $formattedRecordSet);
+                    fwrite($fp, $insertBlockHead.$formattedRecordSet.$insertBlockFoot);
                 }
             }
 
@@ -324,7 +336,6 @@ class pollinate extends Command
         $stubHead = $stubHead.$this->getDocblock($tablename);
         $stubHead = $stubHead.PHP_EOL.$this->indent(2)."\Schema::disableForeignKeyConstraints();".PHP_EOL;
         $stubHead = $stubHead.PHP_EOL.$this->indent(2)."\DB::table('$tablename')->delete();".PHP_EOL;
-        $stubHead = $stubHead.PHP_EOL.$this->indent(2)."\DB::table('$tablename')->insert(".PHP_EOL;
         return $stubHead;
     }
 
@@ -337,10 +348,33 @@ class pollinate extends Command
     private function getSeederFileFoot():String
     {
         $stubFoot = "";
-        $stubFoot .= PHP_EOL.$this->indent(2).");".PHP_EOL;
         $stubFoot .= PHP_EOL.$this->indent(2)."\Schema::enableForeignKeyConstraints();";
         $stubFoot .= PHP_EOL.$this->getStubParts()['foot'];
         return $stubFoot;
+    }
+
+
+    /**
+     * Return head of query builder command
+     *
+     * @param  String $tablename
+     * @return String
+     */
+    private function getInsertBlockHead(String $tablename):String
+    {
+        return PHP_EOL.$this->indent(2)."\DB::table('$tablename')->insert(".PHP_EOL;
+    }
+
+
+    /**
+     * Return foot of query builder command
+     *
+     * @param  String $tablename
+     * @return String
+     */
+    private function getInsertBlockFoot(String $tablename):String
+    {
+        return $this->indent(2).");".PHP_EOL;
     }
 
 
@@ -444,8 +478,8 @@ class pollinate extends Command
         $page = 0;
 
         do{
-            $limit = POLLINATE_SELECT_SIZE;
-            $offset = POLLINATE_SELECT_SIZE * $page;
+            $limit = $this->pageSize;
+            $offset = $this->pageSize * $page;
 
             $sql =<<<SQL
                 SELECT  *
@@ -625,14 +659,29 @@ class pollinate extends Command
 
 
     /**
-     * Parse arguments
+     * Output list of the ignored tables and exit.
+     *
+     * @return void
+     */
+    private function showIgnored():void
+    {
+        $this->info("Ignored tables:");
+        fwrite(STDOUT, join(array_map(fn($i) => "* $i ".PHP_EOL, $this->ignoreTables)));
+        die();
+    }
+
+
+    /**
+     * Parse and handle arguments
      * 
      * @return void
      */
     private function handleArgs():void
     {
+        (bool)$this->option('show-ignored') ? $this->showIgnored() : null;
         $this->showOutput = (bool)$this->option('silent') || (bool)$this->option('quiet') ? false : true;
         $this->prefix = $this->option('prefix') ?? 'pollinate';
         $this->overwrite = (bool)$this->option('overwrite') ? true : false;
+        $this->pageSize = is_numeric($this->option('pagesize')) ? floor((int)$this->option('pagesize')) : DEFAULT_PAGE_SIZE;
     }
 }
