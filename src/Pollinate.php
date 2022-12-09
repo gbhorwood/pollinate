@@ -1,4 +1,5 @@
 <?php
+namespace Gbhorwood\Pollinate;
 /**
  * MIT License
  * 
@@ -23,7 +24,6 @@
  * SOFTWARE.
  */
 
-namespace App\Console\Commands;
 
 use DB;
 use Illuminate\Support\Str;
@@ -35,7 +35,7 @@ use Illuminate\Console\Command;
 define('DEFAULT_PAGE_SIZE', 5);
 
 
-class pollinate extends Command
+class Pollinate extends Command
 {
     /**
      * The name and signature of the console command.
@@ -47,7 +47,8 @@ class pollinate extends Command
         {--pagesize= : Number of records per insert}
         {--overwrite : Overwrite existing seeder files of the same name}
         {--silent : Suppress non-error output}
-        {--show-ignored : Show tables that will not be seeded}
+        {--show-tables : Show tables that can be seeded}
+        {--show-ignored : Show tables that will be ignored unless explicitly requested}
         {tables?}';
 
     /**
@@ -153,9 +154,12 @@ class pollinate extends Command
         $tableNames = $this->getTableNames();
 
         /**
-         * Handle desired overwrite behaviour; either delete existing target files or error
+         * Handle desired overwrite behaviour
+         * If overwriting, delete existing target seed files and proceed
+         * If not overwriting, display existing files list as error and remove tables
+         * from tableNames.
          */
-        $this->handleOverwrite($tableNames);
+        $tableNames = $this->handleOverwrite($tableNames);
 
         /**
          * Write seed file for each table
@@ -163,9 +167,9 @@ class pollinate extends Command
         $seedClasses = array_map(fn($tn) => $this->writeSeed($tn), $tableNames);
 
         /**
-         * Output content for DatabaseSeeder.php
+         * Output content for DatabaseSeeder.php if any
          */
-        if($this->showOutput) {
+        if($this->showOutput && count($seedClasses) > 0) {
             $this->info(PHP_EOL."Add this to DatabaseSeeder.php");
             array_map(fn($sc) => print $sc.','.PHP_EOL, array_filter($seedClasses));
         }
@@ -216,7 +220,7 @@ class pollinate extends Command
             $this->doInfo("Seeded table '$tablename'");
 
             /**
-             * Return class name for DatabaseSeeder.php
+             * Return class name for DatabaseSeeder.php display
              */
             return $className.'::class';
         }
@@ -233,6 +237,9 @@ class pollinate extends Command
     /**
      * Confirm the system can run this script. Exit on
      * any failure.
+     *
+     * Composer already enforces these prerequisites, but we check them
+     * here in case someone did the old-fashioned manual install.
      * 
      * @return void
      */
@@ -383,28 +390,32 @@ class pollinate extends Command
      * we will be creating. If not overwriting, test for existing files
      * we will be creating and error if existing.
      *
+     * Returns an updated list of table names, with tables that cannot be
+     * pollinated due to overwrite removed.
+     *
      * @param  Array $tableNames
-     * @return void
+     * @return Array
      */
-    private function handleOverwrite(Array $tableNames):void
+    private function handleOverwrite(Array $tableNames):Array
     {
         /**
          * Overwrite existing seeder files
          * Pre delete all files we will be creating later, if any
          */
         if($this->overwrite) {
-            array_map(function($t) {
+            $handledTableNames = array_map(function($t) {
                 $path = $this->getFileName($t);
                 if(file_exists($path)) {
                     if(unlink($path)) {
                         $this->doInfo("deleted $path");
+                        return $t;
                     }
                     else {
                         $this->error("could not delete $path");
-                        die();
                     }
                 }
             }, $tableNames);
+            return $handledTableNames;
         }
 
         /**
@@ -412,19 +423,23 @@ class pollinate extends Command
          * If any files we will be creating later exist, error and die
          */
         if(!$this->overwrite) {
-            $existingFiles = array_map(function($t) {
+            $result = array_map(function($t) {
                 $path = $this->getFileName($t);
                 if(file_exists($path)) {
-                    return $path;
+                    return [$path, $t];
                 }
             }, $tableNames);
-            $existingFiles = array_filter($existingFiles);
+
+            $existingFiles = array_map(fn($f) => $f[0], array_filter($result));
+            $removeTableNames = array_map(fn($f) => $f[1], array_filter($result));
 
             if(count($existingFiles)) {
                 $errorMessage = PHP_EOL."Cannot overwrite the following files:".join(array_map(fn($t) => PHP_EOL."* $t ", $existingFiles));
                 $this->error($errorMessage);
-                fwrite(STDERR, "You can force overwrite by passing the --overwrite option.");
+                fwrite(STDERR, "You can force overwrite by passing the --overwrite option.".PHP_EOL);
             }
+
+            return array_diff($tableNames, $removeTableNames);
         }
     }
 
@@ -661,13 +676,26 @@ class pollinate extends Command
     /**
      * Output list of the ignored tables and exit.
      *
-     * @return void
+     * @return bool
      */
-    private function showIgnored():void
+    private function showIgnored():bool
     {
         $this->info("Ignored tables:");
         fwrite(STDOUT, join(array_map(fn($i) => "* $i ".PHP_EOL, $this->ignoreTables)));
-        die();
+        return true;
+    }
+
+
+    /**
+     * Output list of the table.
+     *
+     * @return bool
+     */
+    private function showTables():bool
+    {
+        $this->info("Tables:");
+        fwrite(STDOUT, join(array_map(fn($i) => "* $i ".PHP_EOL, $this->getTableNames())));
+        return true;
     }
 
 
@@ -678,7 +706,12 @@ class pollinate extends Command
      */
     private function handleArgs():void
     {
-        (bool)$this->option('show-ignored') ? $this->showIgnored() : null;
+        $die[] = (bool)$this->option('show-tables') ? $this->showTables() : false;
+        $die[] = (bool)$this->option('show-ignored') ? $this->showIgnored() : false;
+        if(in_array(true,$die)) {
+            die();
+        }
+
         $this->showOutput = (bool)$this->option('silent') || (bool)$this->option('quiet') ? false : true;
         $this->prefix = $this->option('prefix') ?? 'pollinate';
         $this->overwrite = (bool)$this->option('overwrite') ? true : false;

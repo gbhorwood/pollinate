@@ -2,12 +2,10 @@
 Pollinate is a command for `artisan` for use in Laravel projects that creates database seed files from your database. If you have data in a database and want to turn it into seeds, pollinate is here.
 
 ## Install
-To install manually, download the the `pollinate.php` file to `app/Console/Commands` then register in `Commands\Pollinate::class` in the `commands` array in `app/Console/Kernel.php`.
-
-For a quicker install, run:
+tbd:
 
 ```shell
-php artisan make:command pollinate && curl -L https://raw.githubusercontent.com/gbhorwood/pollinate/master/src/pollinate.php -o app/Console/Commands/pollinate.php
+composer require gbhorwood/pollinate
 ```
 
 ## Prerequisites
