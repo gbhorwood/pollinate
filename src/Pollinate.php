@@ -237,6 +237,9 @@ class Pollinate extends Command
     /**
      * Confirm the system can run this script. Exit on
      * any failure.
+     *
+     * Composer already enforces these prerequisites, but we check them
+     * here in case someone did the old-fashioned manual install.
      * 
      * @return void
      */
