@@ -1,0 +1,29 @@
+{
+    "name": "gbhorwood/pollinate",
+    "description": "Artisan command to create seed files from the database",
+    "type": "console",
+    "license": "MIT",
+    "require": {
+        "php": "^7.4|^8.0",
+      	"ext-pdo": "*",
+        "doctrine/dbal": "^3.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gbhorwood\\Pollinate\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "grant horwood",
+            "email": "ghorwood@cloverhitch.ca"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gbhorwood\\Pollinate\\PollinateServiceProvider"
+            ]
+        }
+    }
+}
