@@ -1,8 +1,11 @@
 # Pollinate
+[![License](http://poser.pugx.org/gbhorwood/pollinate/license)](https://packagist.org/packages/gbhorwood/pollinate)
+[![License](http://poser.pugx.org/gbhorwood/pollinate/require/php)](https://packagist.org/packages/gbhorwood/pollinate)
+
 Pollinate is a command for `artisan` for use in Laravel projects that creates database seed files from your database. If you have data in a database and want to turn it into seeds, pollinate is here.
 
 ## Install
-tbd:
+Install via composer
 
 ```shell
 composer require gbhorwood/pollinate
