@@ -114,6 +114,12 @@ class Pollinate extends Command
      */
     protected String $seedsDirectory;
 
+    /**
+     * The namespace of seed files
+     *
+     * @var String
+     */
+    protected String $seedsNamespace;
 
     /**
      * Create a new command instance.
@@ -141,7 +147,9 @@ class Pollinate extends Command
         /**
          * Deduce target directory for writing seeds
          */
-        $this->seedsDirectory = $this->getSeedsDirectory();
+        $dirNamespaceArray = $this->getSeedsDirectory();
+        $this->seedsDirectory = $dirNamespaceArray[0];
+        $this->seedsNamespace = $dirNamespaceArray[1];
 
         /**
          * Validate we can run this script
@@ -300,26 +308,28 @@ class Pollinate extends Command
      * Get the directory where the seeders live. One of:
      *  - database/seeders
      *  - database/seeds
-     * If neither exist, error and die.
+     * And it's corresponding namespace.
+     * If neither directory exists, error and die.
      *
-     * @return String
+     * @return Array
      */
-    private function getSeedsDirectory():String
+    private function getSeedsDirectory():Array
     {
         /**
          * Potential valid seeder directories
          */
         $possibleDirectories = [
-            $this->laravel->basePath().DIRECTORY_SEPARATOR.'database'.DIRECTORY_SEPARATOR.'seeders',
-            $this->laravel->basePath().DIRECTORY_SEPARATOR.'database'.DIRECTORY_SEPARATOR.'seeds',
+            'seeders',
+            'seeds',
         ];
 
         /**
          * Return the first valid directory
          */
         foreach($possibleDirectories as $possibleDirectory) {
-            if(file_exists($possibleDirectory) && is_dir($possibleDirectory)) {
-                return $possibleDirectory;
+            $path = $this->laravel->basePath().DIRECTORY_SEPARATOR.'database'.DIRECTORY_SEPARATOR.$possibleDirectory;
+            if(file_exists($path) && is_dir($path)) {
+                return [$path, 'Database\\'.ucfirst($possibleDirectory)];
             }
         }
 
@@ -340,6 +350,7 @@ class Pollinate extends Command
     {
         $stubHead = trim($this->getStubParts()['head']).PHP_EOL.PHP_EOL;
         $stubHead = str_replace("{{ class }}", $className, $stubHead);
+        $stubHead = str_replace("{{ namespace }}", $this->seedsNamespace, $stubHead);
         $stubHead = $stubHead.$this->getDocblock($tablename);
         $stubHead = $stubHead.PHP_EOL.$this->indent(2)."\Schema::disableForeignKeyConstraints();".PHP_EOL;
         $stubHead = $stubHead.PHP_EOL.$this->indent(2)."\DB::table('$tablename')->delete();".PHP_EOL;
@@ -412,10 +423,12 @@ class Pollinate extends Command
                     }
                     else {
                         $this->error("could not delete $path");
+                        return null;
                     }
                 }
+                return $t;
             }, $tableNames);
-            return $handledTableNames;
+            return array_filter($handledTableNames);
         }
 
         /**
