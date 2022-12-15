@@ -380,7 +380,7 @@ class Pollinate extends Command
      */
     private function getInsertBlockHead(String $tablename):String
     {
-        return PHP_EOL.$this->indent(2)."\DB::table('$tablename')->insert(".PHP_EOL;
+        return PHP_EOL.$this->indent(2)."\DB::table('$tablename')->insert([".PHP_EOL;
     }
 
 
@@ -392,7 +392,7 @@ class Pollinate extends Command
      */
     private function getInsertBlockFoot(String $tablename):String
     {
-        return $this->indent(2).");".PHP_EOL;
+        return $this->indent(2)."]);".PHP_EOL;
     }
 
 
