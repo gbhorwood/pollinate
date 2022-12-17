@@ -6,7 +6,7 @@
     "require": {
         "php": "^7.4|^8.0",
       	"ext-pdo": "*",
-        "doctrine/dbal": "^3.5"
+        "doctrine/dbal": "^3.4"
     },
     "autoload": {
         "psr-4": {
