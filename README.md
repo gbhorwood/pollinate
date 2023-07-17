@@ -2,7 +2,7 @@
 [![License](http://poser.pugx.org/gbhorwood/pollinate/license)](https://packagist.org/packages/gbhorwood/pollinate)
 [![License](http://poser.pugx.org/gbhorwood/pollinate/require/php)](https://packagist.org/packages/gbhorwood/pollinate)
 
-Pollinate is a command for `artisan` for use in Laravel projects that creates database seed files from your database. If you have data in a database and want to turn it into seeds, pollinate is here.
+Pollinate is a command for `artisan` for use in Laravel projects that creates database seed files from your database. If you have data in a database and want to turn it into seeds, pollinate is here. Pollinate was developed as an internal-use tool for [fruitbat studios](https://fruitbat.studio)/cloverhitch technologies/kludgetastic implementations.
 
 ## Install
 Install via composer
